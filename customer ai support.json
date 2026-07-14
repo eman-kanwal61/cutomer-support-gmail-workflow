@@ -1,0 +1,403 @@
+{
+  "name": "customer ai support",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1616,
+        -272
+      ],
+      "id": "be9910e4-256a-47a6-96cd-9a2cc321d09c",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EVRFC5mwG4gGeTHC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Customer support ai ",
+              "description": "Any email that is related to ai and automation or related to waht eman kanwal provides or any FAQS related to ai \n"
+            },
+            {
+              "category": "other",
+              "description": "Any email that is not related to ai automation"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -1344,
+        -272
+      ],
+      "id": "e5c07f22-580b-45d6-944a-a9f5dc8589b8",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        -16
+      ],
+      "id": "9b19488a-ec57-4591-9ecc-50cabf418949",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "RsuJDzlP5SSJnrAb",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Gmail Trigger').item.json.text }}",
+        "options": {
+          "systemMessage": "You are an AI Email Assistant responsible for processing incoming Gmail messages.\n\nYour responsibilities:\n- Read and understand the content of incoming emails.\n- Identify the sender's intent, request, or question.\n- Classify emails into categories such as:\n  - Inquiry\n  - Support Request\n  - Meeting Request\n  - Sales Opportunity\n  - Feedback\n  - Spam\n  - Other\n- Generate professional, concise, and helpful responses.\n- Maintain a polite and professional tone in all communications.\n- If important information is missing, ask for clarification instead of making assumptions.\n- Summarize long emails when necessary.\n- Extract important details such as:\n  - Sender Name\n  - Email Address\n  - Company Name\n  - Requested Action\n  - Deadlines or Dates\n- Return the output in structured JSON format.\n\nAlways prioritize accuracy, professionalism, and clarity."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -976,
+        -288
+      ],
+      "id": "fc9083f9-bb61-4b29-95e8-862bb50e688c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -80
+      ],
+      "id": "2f99db19-4e54-4aa9-b55b-096001735312",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "RsuJDzlP5SSJnrAb",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "use this tool for eman kanwal ai customer support questioning answering ",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "customer-support",
+          "mode": "list",
+          "cachedResultName": "customer-support"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        -832,
+        -64
+      ],
+      "id": "ae1317a6-30af-4902-a2ab-a5503107bda8",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "tD5S2clBKLumMmgg",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        96
+      ],
+      "id": "d5e43e68-d0a9-4fa3-b9af-ae2b9b0ce5fb",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NOuTp7BaHaTt47lS",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        -48
+      ],
+      "id": "f29dc830-d89a-4249-b2dd-f9fed2ef24cb",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "CATEGORY_UPDATES"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        -288
+      ],
+      "id": "abfb727a-bcd9-4976-95e6-33bc3d59926f",
+      "name": "Add label to message",
+      "webhookId": "92b3a5f7-c2ec-44d4-a866-f33ca9dec472",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EVRFC5mwG4gGeTHC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Customer support agent ",
+        "height": 80,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -288,
+        -336
+      ],
+      "typeVersion": 1,
+      "id": "1f55adfa-3711-4690-ba1a-811e2d7d4942",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "19f612476dd0a3de",
+          "threadId": "19f612476dd0a3de",
+          "labelIds": [
+            "CATEGORY_PROMOTIONS",
+            "UNREAD",
+            "INBOX"
+          ],
+          "sizeEstimate": 59939,
+          "headers": {
+            "delivered-to": "Delivered-To: ekanwal247@gmail.com",
+            "received": "Received: from MTA4Njc4NDcx (unknown)\r\n\tby geopod-ismtpd-31 (SG) with HTTP\r\n\tid i4fThciOQa-gfE9xnvJfeg\r\n\tTue, 14 Jul 2026 15:00:06.433 +0000 (UTC)",
+            "x-received": "X-Received: by 2002:a05:622a:1147:b0:517:599d:ce19 with SMTP id d75a77b69052e-51cbf2405b3mr134378411cf.48.1784041207399;\r\n        Tue, 14 Jul 2026 08:00:07 -0700 (PDT)",
+            "arc-seal": "ARC-Seal: i=1; a=rsa-sha256; t=1784041207; cv=none;\r\n        d=google.com; s=arc-20260327;\r\n        b=mMoW26giKhgqXS65Ix0Xb/0b43lr31ayBZQWHDoKFt+q5fLNDw8gu1Q2jOa/Kn4MlC\r\n         br+A3CCNbV+a4ZPaCSa4EEMdKOmd7OJWoVyyUz1OMFSWaN4JiI5LkuDjKEuWqTgnrayd\r\n         rqs37RizkxHC/HIrnKkN22gqDrMmv9C8FdH4k2FLRvV0mGhRmxoL8OWIH4kiNum+VIEE\r\n         lOiyMYEEY7Z9AY6hIul0uAskyhMr2rQO0vAvPDnuQAmVBsK8bEKYBZ0tX+4eF++KJLwh\r\n         3FuaZDxs2Zqqk24k5vEmoe1LEbGhDZkIjBXguDg7V7hx9MmUa9nE/810oKxpFj91g84h\r\n         x5YQ==",
+            "arc-message-signature": "ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;\r\n        h=to:list-unsubscribe-post:list-unsubscribe:reply-to:subject\r\n         :message-id:mime-version:from:date:dkim-signature:dkim-signature;\r\n        bh=WZHg3jv4TeQolR27hA7CPOwGWoTrX9yoYAt9ssdLZV4=;\r\n        fh=hgLRvS0Ssfg8LRjzstJuQgypgLfMGMsMRCS+yXJRahI=;\r\n        b=YAvYgmQpv9yF1BuIO/IzhWpEx87skJVkxzhzSS+ORA40yQZN4l7qU7iR7c8Pan2pEQ\r\n         65yMa6sEyvl81bCB8sqTtYdzPy5ONxeCtzbI2rhoBsAqwsUO7MorpLgq05z960cHrYvg\r\n         7r5l/Zb8ENgX7Ym4gAM2b08kxkMrAUKE0isP0PuzqTBBsIWrNNaUta2hvcCNhBz/a7h6\r\n         cVUwSSCDJcp4YO502/M+jHnY7AdXovarXGGbt+9R4yZRhccSBDgbM6W0YcHYqoqc56zI\r\n         YqVAJiM1z3KtV+U5NSx7bf3TQk//VpshIU/NYw37UxzbNP7t97YkyachTTiFXhgXxAHJ\r\n         G3Jg==;\r\n        dara=google.com",
+            "arc-authentication-results": "ARC-Authentication-Results: i=1; mx.google.com;\r\n       dkim=pass header.i=@mail.medium.com header.s=hightouch header.b=QdMp7WKC;\r\n       dkim=pass header.i=@sendgrid.info header.s=smtpapi header.b=gNy3H3ag;\r\n       spf=pass (google.com: domain of bounces+108678471-53c3-ekanwal247=gmail.com@em7172.mail.medium.com designates 159.183.3.66 as permitted sender) smtp.mailfrom=\"bounces+108678471-53c3-ekanwal247=gmail.com@em7172.mail.medium.com\";\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=medium.com",
+            "return-path": "Return-Path: <bounces+108678471-53c3-ekanwal247=gmail.com@em7172.mail.medium.com>",
+            "received-spf": "Received-SPF: pass (google.com: domain of bounces+108678471-53c3-ekanwal247=gmail.com@em7172.mail.medium.com designates 159.183.3.66 as permitted sender) client-ip=159.183.3.66;",
+            "authentication-results": "Authentication-Results: mx.google.com;\r\n       dkim=pass header.i=@mail.medium.com header.s=hightouch header.b=QdMp7WKC;\r\n       dkim=pass header.i=@sendgrid.info header.s=smtpapi header.b=gNy3H3ag;\r\n       spf=pass (google.com: domain of bounces+108678471-53c3-ekanwal247=gmail.com@em7172.mail.medium.com designates 159.183.3.66 as permitted sender) smtp.mailfrom=\"bounces+108678471-53c3-ekanwal247=gmail.com@em7172.mail.medium.com\";\r\n       dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=medium.com",
+            "dkim-signature": "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sendgrid.info;\r\n\th=content-type:date:from:mime-version:subject:reply-to:list-unsubscribe:\r\n\tlist-unsubscribe-post:to:cc:content-type:date:feedback-id:from:subject:to;\r\n\ts=smtpapi; t=1784041206;\r\n\tbh=WZHg3jv4TeQolR27hA7CPOwGWoTrX9yoYAt9ssdLZV4=;\r\n\tb=gNy3H3agRORX1P1jMsUuI1mYvTGkDuYCO7QWUwwkiUBscHuDXfsffX4ACtOjRIOdzagD\r\n\tJlOpQCoWDrVSRVgvr7zYeYmnRSJmmUNvQtS6QtvLmqj9R2WHuTL09GnxoUOxRuikaQuot9\r\n\tC9rWoQPj9l4r2szfAExn0qDCpibcP7vi0=",
+            "content-type": "Content-Type: multipart/alternative; boundary=5a0ad66c1b57045eec0794d92def230894d852fe9b359ab4edac1fba7905",
+            "date": "Date: Tue, 14 Jul 2026 15:00:06 +0000 (UTC)",
+            "from": "From: Medium Events <noreply@medium.com>",
+            "mime-version": "Mime-Version: 1.0",
+            "message-id": "Message-ID: <i4fThciOQa-gfE9xnvJfeg@geopod-ismtpd-31>",
+            "subject": "Subject: Medium Day 2026: Register Now",
+            "reply-to": "Reply-To: Medium Events <noreply@medium.com>",
+            "list-unsubscribe": "List-Unsubscribe:\r\n <https://medium.com/me/notifications/unsubscribe?token=d815c5aa6519.77d05c80-4f87-4bb9-966c-592c5a7c5df1.1784041206.allow_product_emails.eabd3194a2038501089f0a5aca0c5a4da181adf594e81a08ed283f628a78f608>",
+            "list-unsubscribe-post": "List-Unsubscribe-Post: List-Unsubscribe=One-Click",
+            "x-sg-eid": "X-SG-EID: \r\n =?us-ascii?Q?u001=2E55w7ZmMf2EEl2GsC3Do5zD4S1I=2FJYx44GyKzMdls2srvGGPXq17rbO3EZ?=\r\n =?us-ascii?Q?KLjsid0lHjs4FTA3FiH8kqz3HuARS1LzXQUT=2FiD?=\r\n =?us-ascii?Q?It8a9Qccv2wDiHrBnpT6V+9i6nBWnFfQB19Yphr?=\r\n =?us-ascii?Q?dad0LAS4=2FrHq8s5zP76ja8RXxK2TjawK6+aHlpe?=\r\n =?us-ascii?Q?EEv63prNs4vqrbaMab+GVUK3WLE71fZNm=2FS+SV3?=\r\n =?us-ascii?Q?rbzPJDoVDo1G6NwcMXc6oDvzHk2OozVGp4KZk2l?= =?us-ascii?Q?MPyM?=",
+            "x-sg-id": "X-SG-ID: \r\n =?us-ascii?Q?u001=2ESdBcvi+Evd=2FbQef8eZF3BpTL9BgbK5wfSJMJGMsmprCfzdk8Q6weRGnug?=\r\n =?us-ascii?Q?VdQiDX=2FLcM9gqwX2v=2Fa56El1GqommYTkqx8MGpK?=\r\n =?us-ascii?Q?d6JFLJn0TL7+P+ZVPq4oP91vgMElehRqbE8r0UP?=\r\n =?us-ascii?Q?LtYwddMgYCcv2GgxRpQSyiFvEsPAhaNPi7qGO9p?=\r\n =?us-ascii?Q?wCvPX4wyhvavUWWkxHmN01zPOZORcLFulUoFMu=2F?=\r\n =?us-ascii?Q?N3xavtO7Nc7HAObk4TVDWxfhtppFyUaxlIPw9Ar?=\r\n =?us-ascii?Q?ZAZ1676nywB5FJpMRJK8wVGOQLBpnmLfACObwtJ?=\r\n =?us-ascii?Q?yRu1ojOwOl=2FyFTlFHX0WjjUs271rSA9=2FBBf3xCy?=\r\n =?us-ascii?Q?mtyoaQnvYkNjhW+=2FwSDUiCk53oBqNFI9gBV2Fez?=\r\n =?us-ascii?Q?geV3HLTc2N+8icS35JSJxu3V6RUI9VQnnDv91jZ?=\r\n =?us-ascii?Q?IjVCIoZL4uZxJe=2F+7dPRimJZWrWQRLj2+70DuId?=\r\n =?us-ascii?Q?b2m64eZdp3OZLwlcX3jEJq1KkEVelhxoqN=2FD00+?=\r\n =?us-ascii?Q?f8PeVXIY0pJR3dkgkp2jJaCtjbO+fKs9BelxoLB?=\r\n =?us-ascii?Q?51=2FRDOJ5Nh9uxZmWEXTxCmsXqqbQTQGKzsrX943?=\r\n =?us-ascii?Q?M=2FvsGbsLFXsvO6PWyQLO0WayrlKdCOq5NjMiZMO?=\r\n =?us-ascii?Q?nB1W4ELEQC7358YW3dBB1UtHqT1wQodrf1iHQ31?=\r\n =?us-ascii?Q?85qU02WFs1+kQAiIiRkpRWsf62bBKvUcQXNNIho?=\r\n =?us-ascii?Q?1uCc7oCCEQe8gNQdVIItEKWJRuYru5ea7KJJIRi?=\r\n =?us-ascii?Q?HGkiI6KX=2FW71ekEe7enBYKN9VTdhjcfrMUSwXtG?=\r\n =?us-ascii?Q?ECKEz2nWNgSF0FeuE=2FZXoGO=2F0K0=2F2m8lrDjk3EL?=\r\n =?us-ascii?Q?Vg96WVcLd802fPfyf=2FlxljF2CylXf1GbPvZep=2FO?=\r\n =?us-ascii?Q?OFZy3g619fYlObJ6ARRw6cK11GhBOj1kednNbD6?=\r\n =?us-ascii?Q?r1of3xLvox6hh15CivUIIGQD0O=2FD7cuHiBgUj=2FP?=\r\n =?us-ascii?Q?aDPY4OK0DFxujbtRnsR0O+6eKAgS2CynX=2FaMAfR?=\r\n =?us-ascii?Q?47PeuhCHLFanX1mVFCnFtinO+sTFC3qt5nrrF3Z?=\r\n =?us-ascii?Q?RVXOjPQrw=2Fc3tOFKJlarB4V8oeDZi6luxGDeS=2Fz?=\r\n =?us-ascii?Q?Y39UdmBn7ozAMrjgOM8nRDQL63t2x=2FGEFvo=3D?=",
+            "to": "To: ekanwal247@gmail.com",
+            "x-entity-id": "X-Entity-ID: u001.cmaKbElFlRkUTVsQ7/wsPg=="
+          },
+          "html": "<!DOCTYPE html><html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" lang=\"en\"><head><title></title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><!--[if mso]>\n<xml><w:WordDocument xmlns:w=\"urn:schemas-microsoft-com:office:word\"><w:DontUseAdvancedTypographyReadingMail/></w:WordDocument>\n<o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml>\n<![endif]--><!--[if !mso]><!--><link href=\"https://glyph.medium.com/buffet/sohne_300_ir___swap/sohne_400_ir___swap/sohne_500_ir___swap/sohne_700_ir___swap.css\" rel=\"stylesheet\" type=\"text/css\"><!--<![endif]--><style>\n*{box-sizing:border-box}body{margin:0;padding:0}a[x-apple-data-detectors]{color:inherit!important;text-decoration:inherit!important}#MessageViewBody a{color:inherit;text-decoration:none}p{line-height:inherit}.desktop_hide,.desktop_hide table{mso-hide:all;display:none;max-height:0;overflow:hidden}.image_block img+div{display:none}sub,sup{font-size:75%;line-height:0} @media (max-width:620px){.row-content{width:100%!important}.stack .column{width:100%;display:block}.mobile_hide{min-height:0;max-height:0;max-width:0;display:none;overflow:hidden;font-size:0}.desktop_hide,.desktop_hide table{display:table!important;max-height:none!important}}\n</style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]--></head><body class=\"body\" style=\"margin:0;padding:0;-webkit-text-size-adjust:none;text-size-adjust:none;background-color:#f9f9f9\"><span style=\"display:none;font-size:1px;color:#ffffff;max-height:0;max-width:0;opacity:0;overflow:hidden;\">Join us on September 18, 2026 to discover something new.</span><table class=\"nl-container\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#f9f9f9\"><tbody><tr><td><table class=\"row row-1\" \nalign=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table class=\"html_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"pad\"><div style=\"font-family:sohne,Arial;text-align:center\" align=\"center\"><!DOCTYPE html><html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" lang=\"en\"><head><title></title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><!--[if mso]>\n<xml><w:WordDocument xmlns:w=\"urn:schemas-microsoft-com:office:word\"><w:DontUseAdvancedTypographyReadingMail/></w:WordDocument>\n<o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml>\n<![endif]--><style>\n*{box-sizing:border-box}body{margin:0;padding:0}a[x-apple-data-detectors]{color:inherit!important;text-decoration:inherit!important}#MessageViewBody a{color:inherit;text-decoration:none}p{line-height:inherit}.desktop_hide,.desktop_hide table{mso-hide:all;display:none;max-height:0;overflow:hidden}.image_block img+div{display:none}sub,sup{font-size:75%;line-height:0} @media (max-width:620px){.row-content{width:100%!important}.stack .column{width:100%;display:block}.mobile_hide{min-height:0;max-height:0;max-width:0;display:none;overflow:hidden;font-size:0}.desktop_hide,.desktop_hide table{display:table!important;max-height:none!important}}\n</style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]--></head><body class=\"body\" style=\"margin:0;padding:0;-webkit-text-size-adjust:none;text-size-adjust:none;background-color:#f9f9f9\"><table class=\"nl-container\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#f9f9f9\"><tbody><tr><td><table \nclass=\"row row-1 mobile_hide\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><div class=\"spacer_block block-1\" style=\"height:24px;line-height:24px;font-size:1px\">&#8202;</div></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!-- End --></body></html></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-2\" align=\"center\" width=\"100%\" \nborder=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table class=\"html_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"pad\"><div style=\"font-family:sohne,Arial;text-align:center\" align=\"center\"><table\n  bgcolor=\"#ffffff\"\n  cellspacing=\"0\"\n  cellpadding=\"0\"\n  width=\"100%\"\n  style=\"width:100%;background-image:url('https://hightouch-assets.com/87429/content_nodes/e5bee805-8113-4e72-8290-0250184136a5.jpg');background-repeat:repeat;background-size:cover;background-color:#ffffff;border-bottom:1px solid #f2f2f2\"\n>\n  <tbody>\n    <tr>\n      <td align=\"center\">\n        <table\n          width=\"121\"\n          cellspacing=\"0\"\n          cellpadding=\"0\"\n          style=\"width:121px;margin-left:auto;margin-right:auto\"\n        >\n          <tbody>\n            <tr>\n              <td style=\"padding:32px 24px\">\n                <a\n                  href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKAor9Pgf29vA8Gtq8jJgLTQ-3DTY_S_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqJJxoliCTgx7O9rMs1zLL-2F4i8dBjMJI-2BREssPZFZD1Ev26vaTemq-2F3p80sp5PgpdvxuNt-2BPUq-2F2zJq-2F2LPu6RJk-2FPP6KxiI2vj70v5sMHNZCoJ1gGCKpXBPrc9xx8XmdPT6-2FvbF0HqrHG9Zx2IT39pw-3D-3D\"\n                  aria-label=\"Medium homepage link\"\n                  target=\"_blank\"\n                  style=\"color:inherit;text-decoration:underline;text-underline-position:from-font;text-decoration-skip-ink:none;word-spacing:normal\"\n                >\n                  <img\n                    height=\"27\"\n                    style=\"vertical-align:top;display:block;width:121px;height:27px;border:none;border-radius:0;margin:0\"\n                    src=\"https://hightouch-assets.com/87429/content_nodes/8eb4cf0b-821a-4338-8e23-d4b3b2712367.png\"\n                    alt=\"Medium\"\n                    width=\"121\"\n                  >\n                </a>\n              </td>\n            </tr>\n          </tbody>\n        </table>\n      </td>\n    </tr>\n  </tbody>\n</table></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-3\" align=\"center\" width=\"100%\" \nborder=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;border-radius:0;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table class=\"image_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"pad\" style=\"width:100%\" align=\"center\"><div style=\"max-width:600px\"><a href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKPJtvKXauA8lOYXJAlxq5pfUQ-2F8zNhTU0AJTp5xGcsvtNMo6k48VF-2BmSyvZtXdHiI1QwF4YQdlyqYJU3z2myHXRuC1oigmdfT1or-2F0SDGUM8-2BhjeK-2FiAazXmN83D7mf-2Fad804H71bh8f9-2FbaS2cXigBgYYZLj58YgA7ah18Hfa-2F3ba8d-2FA99LtjHg111EdQZ8Q-3D-3DjLD6_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqdZEbLAODwrOt8uFDGsuhOLpJBy1Qw6ZIvJ8vBOFFQXjWbSLZliDlmikeORoUcVPxb8RondY-2F2JtRi1OHF-2FlL3e3MQgNd7TEoB74HGm42jGwCoO3GaNQgUmejn7oKxyp8W-2BbGLYh5a7axlz7-2BfHK7nQ-3D-3D\" target=\"_blank\"><img \nsrc=\"https://hightouch-assets.com/87429/content_nodes/164e1e40-1ebe-4959-ab76-8b6a930fd418.png\" style=\"display:block;height:auto;border:0;width:100%\" width=\"600\" alt=\"Medium Day\" title=\"Medium Day\" height=\"auto\"></a></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-4\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table \nclass=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\">\n<tr><td class=\"col-pad\" style=\"padding-top:32px\"><table class=\"paragraph_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;word-break:break-word\"><tr><td class=\"pad\" style=\"padding-left:24px;padding-right:24px\"><div style=\"color:#242424;direction:ltr;font-family:sohne,Arial;font-size:16px;font-weight:400;letter-spacing:0;line-height:1.5;text-align:left;mso-line-height-alt:24px\"><p style=\"margin:0\">\nHi Ekanwal,</p></div></td></tr></table></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-5\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table class=\"paragraph_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;word-break:break-word\"><tr><td class=\"pad\" \nstyle=\"padding-top:32px;padding-bottom:16px;padding-left:24px;padding-right:24px\"><div style=\"color:#242424;direction:ltr;font-family:sohne,Arial;font-size:16px;font-weight:400;letter-spacing:0;line-height:1.4;text-align:left;mso-line-height-alt:22px\"><p style=\"margin:0;margin-bottom:24px\">\nReaders discover something new on Medium every single day. That’s the beauty of sharing your stories as a writer—you can reach someone and change their mind, give them a new skill, help them understand something complicated. Many writers tell us that on Medium, they find <em>their</em> people, readers who are just as passionate about the topic you write about as you are.&nbsp;</p><p style=\"margin:0;margin-bottom:24px\">\nAs a reading and writing platform, this normally happens via the medium of the written word. But on one day a year, our community gathers live to share stories on Medium Day.&nbsp;</p><p style=\"margin:0\">\n<a href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKPJtvKXauA8lOYXJAlxq5pfUQ-2F8zNhTU0AJTp5xGcsvtNMo6k48VF-2BmSyvZtXdHiI1QwF4YQdlyqYJU3z2myHXRuC1oigmdfT1or-2F0SDGUM8-2BhjeK-2FiAazXmN83D7mf-2Fad804H71bh8f9-2FbaS2cXigBgYYZLj58YgA7ah18Hfa-2F3ba8d-2FA99LtjHg111EdQZ8Q-3D-3DuWJ3_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqJYhco5KGGTBExn44681XmxkORWZbInlUEBMBsD0d-2F0y9CLP3c8oYBMVO7i73jF8l0em9B1UF-2BFqTg-2FQY7j8Whvp0cm-2FCq7P6eLd2K40jiBZRu9Lj1IUlASVI4PPqba6Nv3rmLzHrVM1oTb60OE2BKw-3D-3D\" target=\"_blank\" style=\"text-decoration: underline; color: #242424;\" rel=\"noopener\">Medium Day</a> is a free, live, virtual gathering happening on <strong>Friday, September 18, 2026, from 8 a.m. to 8 p.m. ET</strong>. This year's theme is simple: <strong>Discover something.</strong></p></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-6\" align=\"center\" width=\"100%\" border=\"0\" \ncellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;border-radius:0;color:#000;padding-left:24px;padding-right:24px;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td><table width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td class=\"column column-1\" width=\"33.333333333333336%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><div class=\"spacer_block block-1 mobile_hide\" style=\"height:1px;line-height:1px;font-size:1px\">&#8202;</div></td><td class=\"column column-2\" width=\"33.333333333333336%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table \nclass=\"button_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"pad\" align=\"center\"><a href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKPJtvKXauA8lOYXJAlxq5pfUQ-2F8zNhTU0AJTp5xGcsvtNMo6k48VF-2BmSyvZtXdHiI1QwF4YQdlyqYJU3z2myHXRuC1oigmdfT1or-2F0SDGUM8-2BhjeK-2FiAazXmN83D7mf-2Fad804H71bh8f9-2FbaS2cXigBgYYZLj58YgA7ah18Hfa-2F3ba8d-2FA99LtjHg111EdQZ8Q-3D-3DHziu_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqEeQdmLr36TTJavsm8Tj9jQCKbdIBd3vGCLQKZeVVKygdqK1SkRIN8HOXyei22uM9J0guM2vJqudhsPLB3WxiPHREuL7ZaTc-2Bqqt0NU7a5xbYHQ2HpbUZkLdNAKs-2BR32isDGGWZf3rW7DzeakapWcZw-3D-3D\" target=\"_blank\" style=\"color:#FFFFFF;text-decoration: underline;\"><!--[if mso]>\n<v:roundrect xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w=\"urn:schemas-microsoft-com:office:word\"  href=\"https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ\"  style=\"height:42px;width:181px;v-text-anchor:middle;\" arcsize=\"54%\" fillcolor=\"#242424\">\n<v:stroke dashstyle=\"Solid\" weight=\"1px\" color=\"#242424\"/>\n<w:anchorlock/>\n<v:textbox inset=\"0px,0px,0px,0px\">\n<center dir=\"false\" style=\"color:#FFFFFF;font-family:sans-serif;font-size:16px\">\n<![endif]-->\n<span class=\"button\" style=\"background-color: #242424; border-bottom: 1px solid #242424; border-left: 1px solid #242424; border-radius: 24px; border-right: 1px solid #242424; border-top: 1px solid #242424; color: #FFFFFF; display: inline-block; font-family: 'sohne', 'Arial'; font-size: 16px; font-weight: 400; mso-border-alt: none; text-align: center; width: 100%; word-break: keep-all; letter-spacing: normal;\"><span class=\"btn-pad\" style=\"word-break: break-word; padding-left: 20px; padding-right: 20px; padding-top: 9px; padding-bottom: 9px; display: block;\"><span style=\"word-break: break-word; line-height: 24px;\">Register now</span></span></span>\n<!--[if mso]></center></v:textbox></v:roundrect><![endif]--></a></td></tr></table></td><td class=\"column column-3\" width=\"33.333333333333336%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><div class=\"spacer_block block-1 mobile_hide\" style=\"height:1px;line-height:1px;font-size:1px\">&#8202;</div></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-7\" align=\"center\" width=\"100%\" border=\"0\" \ncellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table \nclass=\"paragraph_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;word-break:break-word\"><tr><td class=\"pad\" style=\"padding-top:32px;padding-bottom:32px;padding-left:24px;padding-right:24px\"><div style=\"color:#242424;direction:ltr;font-family:sohne,Arial;font-size:16px;font-weight:400;letter-spacing:0;line-height:1.4;text-align:left;mso-line-height-alt:22px\"><p style=\"margin:0;margin-bottom:24px\">\nEvery attendee will walk away with a new discovery in their pocket. Maybe a change to how you see a subject you thought you understood. Maybe a technique that finally unlocks something in your writing. Or perhaps you discover a community of people who care about the same things you do. Whatever it is, Medium Day is the place to find it.</p><p style=\"margin:0;margin-bottom:24px\">\nRead more about what to expect on <a href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKOUCKbH-2F6K9gC07KvrAY-2B3xYIF3k2Iw-2FgajHCnid5vMuaMLAT6EBYgrdJaZmB2mtUVeuNZsWSrImVM-2BgZkOSNVk-3DTMSV_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCq0js7l-2Fe-2FAUVhBoMEdr85oUkL5U63ov9GHxsTukIKMEp-2FGsDL8oaLShuBX50TXiMZpWyC-2FzTWT6Sa-2BaQnK1j1OTi95rD-2FeLBMcgTq5ND12B07rc9vDncAM9OSmixQ0sA170AttBRMkjchpQQumdp2wA-3D-3D\" target=\"_blank\" style=\"text-decoration: underline; color: #242424;\" rel=\"noopener\">our blog here</a>.</p><p style=\"margin:0\">Medium Day is free and open to everyone. Whether you've been writing on Medium for years or you've never published a word, there's something here for you.</p></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-8\" align=\"center\" \nwidth=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;padding-left:24px;padding-right:24px;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td><table width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"col-pad\" style=\"padding-bottom:32px\"><table class=\"paragraph_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;word-break:break-word\"><tr><td class=\"pad\"><div style=\"color:#242424;direction:ltr;font-family:sohne,Arial;font-size:16px;font-weight:400;letter-spacing:0;line-height:1.5;text-align:left;mso-line-height-alt:24px\"><p style=\"margin:0\">We hope to see you at Medium Day!</p></div></td></tr></table><table class=\"paragraph_block block-2\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;word-break:break-word\"><tr><td class=\"pad\"><div style=\"color:#6b6b6b;direction:ltr;font-family:sohne,Arial;font-size:16px;font-weight:400;letter-spacing:0;line-height:1.5;text-align:left;mso-line-height-alt:24px\"><p style=\"margin:0\">The Medium team</p></div></td></tr></table></td></tr></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-9\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" \ncellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table \nclass=\"html_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"pad\"><div style=\"font-family:sohne,Arial;text-align:center\" align=\"center\"><!--\nhttps://us-east-1.sendht.com/87429/eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..7f5_ky-pi7WGapFu.TkbF0OE_RBi_NgRhbIs5irqBLWcNnAF_fQN8F7QwlOZvFI-LlXOmm3fQZ0TuGhBofb5z7j9hfZrbX6XXe328GGenLviEiHd3OFSl3dSjeHbaMSlvjLRvfkk2WtkLWSYBWsMTFMWcSz6uWh7blUhYup_7f427RCGD9X3ZVieK5t_Bo5iYu9xTUJHgnx6KTlxGJStJAmdY-xo5YXEDmZPdFPJuHG7d2ZOYNWscZi7JmhTPCtNDz3VMt8dwff50jcqq60FwXknxEp6GxYNhCSIMrJNx_TaCP0TBoGUFmnIiIlL2PEqmkC36RvLyrNl6X7H5adNFuxuR2ADaXJBwECQ8Qunqfswuru7gNPMJ7qunZyxEBivqd7y-dsc-KTkZex5YXcVD-jYdMFSr3CSwml21NKMt4ZUsmeJxfQNsPOUZp-ImO3rKj-meTxsWZwaxEJwGFMM98TaDb4OKUUnCzl8O13LK7rZ8oKW1VyeUff1krmU.SKmZAelq26OsB2WTdMOkNw\n-->\n<table class=\"row row-footer\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: transparent;\">\n  <tbody>\n    <tr>\n      <td>\n        <table class=\"row-content stack\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #ffffff; color: #242424; width: 100%; max-width: 600px; margin: 0 auto;\">\n          <tbody>\n            <tr>\n              <td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; font-weight: 400; text-align: left; vertical-align: top;\">\n                <!-- full-width top divider -->\n                <table class=\"divider_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                  <tr>\n                    <td class=\"pad\" style=\"padding-left:0;padding-right:0;\" align=\"center\">\n                      <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n                        <tr>\n                          <td class=\"divider_inner\" style=\"font-size: 1px; line-height: 1px; border-top: 1px solid #f2f2f2;\"><span style=\"word-break: break-word;\">&#8202;</span></td>\n                        </tr>\n                      </table>\n                    </td>\n                  </tr>\n                </table>\n                <!-- address line -->\n                <table class=\"paragraph_block block-2\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;\">\n                  <tr>\n                    <td class=\"pad\" style=\"padding-top:24px;padding-left:24px;padding-right:24px;\">\n                      <div style=\"color:#242424;font-family:sohne, Arial, sans-serif;font-size:12px;line-height:22px;text-align:center;mso-line-height-alt:22px;\">\n                        <p style=\"margin: 0; word-break: break-word;\"><span style=\"word-break: break-word;\">Sent by <a style=\"text-decoration: underline; color: #242424;\" href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKAor9Pgf29vA8Gtq8jJgLTQ-3DQWRc_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqpS2LQBr5r-2FlKBT3EtY25h7S8SRIpyP4P3YB7oNfGp3hgo51DV2poGTn0qiCEOWIq9oLFxDHGujGnzBgdG8HTnIx3AMEZ9k5X-2B39xbC7xmkbhvHWs1E-2BeHzMYP0vkXG6lMYQ-2FUEGrMinSWFqvToiLpw-3D-3D\" target=\"_blank\" rel=\"noopener\">Medium</a> &middot; 3500 South DuPont Highway, Suite IQ-101, Dover, DE 19901</span></p>\n                      </div>\n                    </td>\n                  </tr>\n                </table>\n                <!-- links -->\n                <table class=\"paragraph_block block-3\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;\">\n                  <tr>\n                    <td class=\"pad\" style=\"padding-top:0px;padding-bottom:32px;padding-left:24px;padding-right:24px;\">\n                      <div style=\"color:#242424;font-family:sohne, Arial, sans-serif;font-size:12px;line-height:22px;text-align:center;mso-line-height-alt:22px;\">\n                        <p style=\"margin: 0; word-break: break-word;\"><span style=\"word-break: break-word;\"><a style=\"text-decoration: underline; color: #242424;\" href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKKStKmdnZbENx4L9kBeeL6pc9dLNbDKfNbrhsCTOqgjqe5pL6rcdt6ad4XGrBzL54VxngpiRnr9Qc6ItC7p4vPYWrrJx0aAutCE5vQ1BooHtCfOzt0Qwz-2BNeL8oooRBw2SEvesQQKBRlT1h5WrB4muHoAl615LUwdoTwfmvYAJi-2Fwmhxxw6uazJvlvWqE-2FRctbtOpHZlM5hcocFbDElzbYP5vCaaDzBLVqrRDj5rrKsk5G9pq5zbSEClgsteV68Pe4vZmpJCrWn0s3w4nElq7V0-3DA_X2_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqnSlKKjioa7ifQIqmtD10UlvcWFkztxy311ebLoeX59XD51q-2BQwq4z3Ck-2Bk10VrfANaGgR1rAE1iWFrCq9dVt4Uv1nMdUFgbTvSThml7-2FrFM7EP96cfkJUXQYRnxH923DPfE0hQjdsw7xoNp-2FMeYHoA-3D-3D\" target=\"_blank\" rel=\"noopener\">Unsubscribe</a> from this type of email &middot; <a style=\"text-decoration: underline; color: #242424;\" href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKLuhXecYZ7rYgr5ppAv1JPMqlDtfy7uOspHveSwkQQrJ3PEvMmlgmVwQv-2BKLUzLLf1FPDQ7HVkVmv9YNb9CY3zY-3DNlWm_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqHRYeDMNVvhyEDSlk8ZC3vs-2BFgOTx54FfjkQGTs7L7vgZIbcHISZ1jMFux3GyuuV9yheoRlQRtEFdRGuxbrHn9PJYb-2FbUlxoggAdS6xYHw-2BzXo6d8-2BU7L3vFZmhciIM3vxiyd8Yqpxt1nZSEl5VjXPQ-3D-3D\" target=\"_blank\" rel=\"noopener\">Careers</a> &middot; <a style=\"text-decoration: underline; color: #242424;\" href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKBKmnzI8DmfuKcZwsEzFI-2F0sEI3-2F-2Bljyx3Kfk6RYjIBxhPXr_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqMJHyGQWN-2FEVSzoBHtjPu068keOncTINFQVLYJceWCr5sTOeLo2e9UuoKacOX13DI4-2F65psCaOWMp18-2FnjrOcj15Er3pXOdlkdSs8ERzofU0AUcr-2FAYdrBCyPZEFwfKavSWR1bBSg-2Bjag9OLET6Ciqg-3D-3D\" target=\"_blank\" rel=\"noopener\">Help center</a> &middot; <a style=\"text-decoration: underline; color: #242424;\" href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKKPKvxaTRas1N05v8ZtNv3USZLM81UGv3IPVVZWmAqIEbAzl1s0vrUJ1rl8dfXrjiz7Diu82S-2F58q5sPTdv2sgw-3DZW2__JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqmK9HAgswbdMg2Tv4qoFtf6Ywh4pXOG2muJjpxCQnWiq1mXA-2BT5i3wkCdOvmTvI5vcOudYuAlBMdBAwiuIKpKdq4cB-2FISWhLt38An-2B-2B1-2BZK94T5kZQjdEEDIgz-2FIVyxaap-2FbR9p-2F-2B6mx13q0Fe6tCTA-3D-3D\" target=\"_blank\" rel=\"noopener\">Privacy policy</a> &middot; <a style=\"text-decoration: underline; color: #242424;\" href=\"https://u108678471.ct.sendgrid.net/ls/click?upn=u001.AnScAb460OlmSUdl0VHEKKPKvxaTRas1N05v8ZtNv3UtxCHqm4jQY-2BM0QovHgwQmfiWeuhAnJlLKxBxj5rxMt3OQPMaN1SYIeTDa9REsy1o-3DUwSB_JUV5uKIcnxBc61-2F9otSb1TO-2FfkXOrDNgkDY7gyilXPI-2B86rGBMIRaErFtMEPAfsjnCVcCS5xL4OwFCoAXga0EbMeb8qa46iGdlPbe1TTx6wDCjS-2BW0aoFX8d9K0ZaONTa9-2FJuXpK-2FoSvdpDvIRwDBAqFF8qYX5OuyYhBzdn35NO-2FbjAYMRamUJ4b1dLHobfRolQLZuicp1dIJ2aRqjHJ1-2B9x5cB9xKHT20gFaE3L5u-2BOICmVbJZNEZGiy0e5exuD175mWwA3kdneq7H6pCvjkmPVK8nSrjSHgTsYJ26pKVcLNTUaMntchuA3FeTiAv5bj3MBG8-2FSZtFqw-2FVmh-2B9-2BQvLw3iWXr1Qpfmsie-2BlwnVxE8h-2FZrGJjkCG8MwqT9YvTgDA18bpMq1JwhAh2Jtc6nue5k3XUbHnGioaDQMKUzesKgGK-2FEsdgni-2BzMnPjYpt-2BMv7ogLkRffX6R0GxfZz8dznCTgRFTgbsGQrPFdkMFRZ26diqvE26y2-2BLBlKzQbjbZoz0PNo7iV1CuWflEfoIzLEDK31bR9F1a0eq0DX8m5eLi-2Bv0AtF0SzDbKGThs-2FV-2FUQez6HN30juVmvrnMs3x5ETkedODU5KczDl9FrlNXg-2FwiQprlx4oQta0W73apSkuT8nS1mI9BnDll3kLxVIBoxga2WYdIsmjh4Ie2Yyh3Q-2BlWDNa6kK6D4eKg0fmluI1fWxTipcA-2B3riYX8fWq0bGvE2sr870vqVEiLYTHfydAXs9-2Ffwo9NTiMhSk0qvuuV2p4ToMPgBiTGBYmZ3CHSW2IE3zQi3OKZUQxE62Sg-2B8QPZm2BT-2B0rtAsxBSrTmkhle6NTnQNk0RxqUYnCPZSkTKJFQhoQjibvEJrDdWiL0Nwh1wypZ7PnjJFFcpuTiSOKIua4VoO9PnkpBz8VlYxThwBGdSE3tTzAjgvo2wb-2BX7y-2FtV6GZ6LUwBNkOX7KkHUTmcxVOvCg38vWNYjCX16uJIEugQFMwSOAr3lJyylxxw9F-2FtCiZ5ELNQ4QGhfGMMM6uxZ33TOiQYjNLD7WXajS0HFM1eTSzyPR-2Ff8nyE681UHtHnl6G6IwLHEKb5DUkwuCqoa5C1R7Skg7sHacZcWQJ45JqF6jvz7MAilx9GB4Ej42OS7t7JsJPgQaVKxnsBjWn86U4M2lgCsVl97ijMbh-2B2HACAdipNXasufaVGX-2FNoLodmBD3ZJDBU-2Fy9MPRuJ6YGDSzYD87ReQgqZzf-2BXcOcUA-3D-3D\" target=\"_blank\" rel=\"noopener\">Terms of service</a></span></p>\n                      </div>\n                    </td>\n                  </tr>\n                </table>\n              </td>\n            </tr>\n          </tbody>\n        </table>\n      </td>\n    </tr>\n  </tbody>\n</table>\n</div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table><table class=\"row row-10\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\">\n<tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#fff;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" style=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><table class=\"html_block block-1\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" \nrole=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tr><td class=\"pad\"><div style=\"font-family:sohne,Arial;text-align:center\" align=\"center\"><!DOCTYPE html><html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" lang=\"en\"><head><title></title><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><!--[if mso]>\n<xml><w:WordDocument xmlns:w=\"urn:schemas-microsoft-com:office:word\"><w:DontUseAdvancedTypographyReadingMail/></w:WordDocument>\n<o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch><o:AllowPNG/></o:OfficeDocumentSettings></xml>\n<![endif]--><!--[if !mso]><!--><link href=\"https://glyph.medium.com/buffet/sohne_300_ir___swap/sohne_400_ir___swap/sohne_500_ir___swap/sohne_700_ir___swap.css\" rel=\"stylesheet\" type=\"text/css\"><!--<![endif]--><style>\n*{box-sizing:border-box}body{margin:0;padding:0}a[x-apple-data-detectors]{color:inherit!important;text-decoration:inherit!important}#MessageViewBody a{color:inherit;text-decoration:none}p{line-height:inherit}.desktop_hide,.desktop_hide table{mso-hide:all;display:none;max-height:0;overflow:hidden}.image_block img+div{display:none}sub,sup{font-size:75%;line-height:0} @media (max-width:620px){.row-content{width:100%!important}.stack .column{width:100%;display:block}.mobile_hide{min-height:0;max-height:0;max-width:0;display:none;overflow:hidden;font-size:0}.desktop_hide,.desktop_hide table{display:table!important;max-height:none!important}}\n</style><!--[if mso ]><style>sup, sub { font-size: 100% !important; } sup { mso-text-raise:10% } sub { mso-text-raise:-10% }</style> <![endif]--></head><body class=\"body\" style=\"margin:0;padding:0;-webkit-text-size-adjust:none;text-size-adjust:none;background-color:#f9f9f9\"><table class=\"nl-container\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;background-color:#f9f9f9\"><tbody><tr><td><table \nclass=\"row row-1 mobile_hide\" align=\"center\" width=\"100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0\"><tbody><tr><td><table class=\"row-content stack\" align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"mso-table-lspace:0;mso-table-rspace:0;color:#000;width:600px;margin:0 auto\" width=\"600\"><tbody><tr><td class=\"column column-1\" width=\"100%\" \nstyle=\"mso-table-lspace:0;mso-table-rspace:0;font-weight:400;text-align:left;vertical-align:top\"><div class=\"spacer_block block-1\" style=\"height:40px;line-height:40px;font-size:1px\">&#8202;</div></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!-- End --></body></html></div></td></tr></table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody></table><!-- End --><img src=\"https://u108678471.ct.sendgrid.net/wf/open?upn=u001.X3qptBdFmPtJYPkAGqsIyUh4ItXRkpDUwQh8FHBcjHE9F31ypK-2BrRGIAjar2-2FyUx7IpANyx71sxbvwkIH2XTAlvFPl55jxLrDxD7NGvzcD4BHe8uc0lbbBtUU4izcNpnYHdf2mMI2qZNURV3R6-2Bn6Cw3K8UdN5SO1a1fyBlu8eUVlMBzS5Yw8uVVyqyQsO5J6E6lIS3PAe05Hs0DW9z5N9O9mgUDPwS6ImTf6L73dT-2FeB-2B2k05ZszzKFoqsF6FTE9czc0KG6S0xPKNOtoj9-2FhRVooqWzrxh6YTxHensayPE2AXFrwGRMKnPIATfXm8XOYFXV72IMDPlkS9nmoCVw-2FbG-2FmB9F5l1MSVa9QXo8nhHr77k1LpFDZnLE0cbjNlYMs2kx5Untux-2BrK-2FXaRTmR5Oy6Izd6L8h5UcQG33lLNchrNI4-2FRdlbGz77JgtA32oTgJCDxem0Sjec9J4aecruQfUyxwIq3k-2BFVZIvUGx4gz3SAtV-2FifvfW3fG4H0R7q6LCFdtNhYQvxQOOgV2yw15VbaZCV-2FdSb9Hkc4NnjjWkIS0ENkCwmmeaZQyxsAS6laTCCs4jl1lDCXi6-2B3W-2BNuikLFXoSEUQGyKt1uvKEabdNGh22G-2B3DpxSH-2F3Top97vw2cjMtFxTFu9QcJOfviP1Uc706METUugII7fMUYxC3qctF1CG9EvJMOIuY6ajXVu4IeUbc21svMd0U4VoAN8ez5sfoNdFFdXl6yV4usM1CASa-2BpSsqGXzIjgK8RubJValXNQtqRkBC5vqm0kWBKcPVfxulJrC1hrLBkA0L4EDpL7L3-2B3GTwrX9UDlFGDzmlH5lziKn7CtkrpBCGqtgqT6GJ6rLlC1NoC6k6x0NIHooqWCob9heSXMangYAPNU-2FcNsiu0m6cTp1EqMvD0vn8oXYimwRVqDXRGfvLRcPrk9igVHKzZgylh0p28eeZlW5FWa-2BoeZZfx-2BAxI8Of8lvudJbMzbRIUIYeEpHwUo4aNJE5U4KFt3zQlaSVP3-2FEX1p3Ad5bCIVjJd-2F6l38CHhuqCTrTJMAH-2Fi1tZJau2quwn-2FuTAV4mGClGGe45aNRuXAR8KDBtGzzelgcuPcL8o6Ggq28GULc4hklNSMIweu66e2-2B3K61UJ5sDQR34162eT2GrYaRL2FipvGpYcuT8lTW0tkMO712Sl8dCNsURnGY0q-2BGvpeTek2dXAy7xTyTWZ4bD98sJbeiHpqMHRacxkNRf6FHTNeNvhOINBEhdC6GRB86gPM-3D\" alt=\"\" width=\"1\" height=\"1\" border=\"0\" style=\"height:1px !important;width:1px !important;border-width:0 !important;margin-top:0 !important;margin-bottom:0 !important;margin-right:0 !important;margin-left:0 !important;padding-top:0 !important;padding-bottom:0 !important;padding-right:0 !important;padding-left:0 !important;\"/></body></html>",
+          "text": " \n\nhttps://medium.com\n\nhttps://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ\n\nHi Ekanwal,\n\nReaders discover something new on Medium every single day. That’s the beauty of\nsharing your stories as a writer—you can reach someone and change their mind,\ngive them a new skill, help them understand something complicated. Many writers\ntell us that on Medium, they find their people, readers who are just as\npassionate about the topic you write about as you are. \n\nAs a reading and writing platform, this normally happens via the medium of the\nwritten word. But on one day a year, our community gathers live to share stories\non Medium Day. \n\nMedium Day\n<https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ>\nis a free, live, virtual gathering happening on Friday, September 18, 2026, from\n8 a.m. to 8 p.m. ET. This year's theme is simple: Discover something.\n\n \n\nRegister now\n<https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ>\n\n \n\nEvery attendee will walk away with a new discovery in their pocket. Maybe a\nchange to how you see a subject you thought you understood. Maybe a technique\nthat finally unlocks something in your writing. Or perhaps you discover a\ncommunity of people who care about the same things you do. Whatever it is,\nMedium Day is the place to find it.\n\nRead more about what to expect on our blog here\n<https://medium.com/blog/medium-day-2026-register-now-b58f0644ce10>.\n\nMedium Day is free and open to everyone. Whether you've been writing on Medium\nfor years or you've never published a word, there's something here for you.\n\nWe hope to see you at Medium Day!\n\nThe Medium team\n\n \n\nSent by Medium <https://medium.com> · 3500 South DuPont Highway, Suite IQ-101,\nDover, DE 19901\n\nUnsubscribe\n<https://medium.com/me/notifications/unsubscribe?token=d815c5aa6519.77d05c80-4f87-4bb9-966c-592c5a7c5df1.1784041206.allow_product_emails.eabd3194a2038501089f0a5aca0c5a4da181adf594e81a08ed283f628a78f608>\nfrom this type of email · Careers\n<https://medium.com/jobs-at-medium/work-at-medium-959d1a85284e> · Help center\n<https://help.medium.com/hc/en-us> · Privacy policy\n<https://policy.medium.com/medium-privacy-policy-f03bf92035c9> · Terms of\nservice <https://policy.medium.com/medium-terms-of-service-9db0094a1e0f>\n\n ",
+          "textAsHtml": "<p>&hairsp;</p><p><a href=\"https://medium.com\">https://medium.com</a></p><p><a href=\"https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ\">https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ</a></p><p>Hi Ekanwal,</p><p>Readers discover something new on Medium every single day. That&rsquo;s the beauty of<br/>sharing your stories as a writer&mdash;you can reach someone and change their mind,<br/>give them a new skill, help them understand something complicated. Many writers<br/>tell us that on Medium, they find their people, readers who are just as<br/>passionate about the topic you write about as you are.&nbsp;</p><p>As a reading and writing platform, this normally happens via the medium of the<br/>written word. But on one day a year, our community gathers live to share stories<br/>on Medium Day.&nbsp;</p><p>Medium Day<br/>&lt;<a href=\"https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ\">https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ</a>&gt;<br/>is a free, live, virtual gathering happening on Friday, September 18, 2026, from<br/>8 a.m. to 8 p.m. ET. This year&apos;s theme is simple: Discover something.</p><p>&hairsp;</p><p>Register now<br/>&lt;<a href=\"https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ\">https://medium.com/mediumday?eventRegSource=Ak1EdQY1Ms95Z-kSyZlT14vsuQbc4yrT0yEaijzaRW1O1guNYoItXZr-NftkrCPL4OGGUwQL7riwn3QW9_bWth28dQ</a>&gt;</p><p>&hairsp;</p><p>Every attendee will walk away with a new discovery in their pocket. Maybe a<br/>change to how you see a subject you thought you understood. Maybe a technique<br/>that finally unlocks something in your writing. Or perhaps you discover a<br/>community of people who care about the same things you do. Whatever it is,<br/>Medium Day is the place to find it.</p><p>Read more about what to expect on our blog here<br/>&lt;<a href=\"https://medium.com/blog/medium-day-2026-register-now-b58f0644ce10\">https://medium.com/blog/medium-day-2026-register-now-b58f0644ce10</a>&gt;.</p><p>Medium Day is free and open to everyone. Whether you&apos;ve been writing on Medium<br/>for years or you&apos;ve never published a word, there&apos;s something here for you.</p><p>We hope to see you at Medium Day!</p><p>The Medium team</p><p>&hairsp;</p><p>Sent by Medium &lt;<a href=\"https://medium.com\">https://medium.com</a>&gt; &middot; 3500 South DuPont Highway, Suite IQ-101,<br/>Dover, DE 19901</p><p>Unsubscribe<br/>&lt;<a href=\"https://medium.com/me/notifications/unsubscribe?token=d815c5aa6519.77d05c80-4f87-4bb9-966c-592c5a7c5df1.1784041206.allow_product_emails.eabd3194a2038501089f0a5aca0c5a4da181adf594e81a08ed283f628a78f608\">https://medium.com/me/notifications/unsubscribe?token=d815c5aa6519.77d05c80-4f87-4bb9-966c-592c5a7c5df1.1784041206.allow_product_emails.eabd3194a2038501089f0a5aca0c5a4da181adf594e81a08ed283f628a78f608</a>&gt;<br/>from this type of email &middot; Careers<br/>&lt;<a href=\"https://medium.com/jobs-at-medium/work-at-medium-959d1a85284e\">https://medium.com/jobs-at-medium/work-at-medium-959d1a85284e</a>&gt; &middot; Help center<br/>&lt;<a href=\"https://help.medium.com/hc/en-us\">https://help.medium.com/hc/en-us</a>&gt; &middot; Privacy policy<br/>&lt;<a href=\"https://policy.medium.com/medium-privacy-policy-f03bf92035c9\">https://policy.medium.com/medium-privacy-policy-f03bf92035c9</a>&gt; &middot; Terms of<br/>service &lt;<a href=\"https://policy.medium.com/medium-terms-of-service-9db0094a1e0f\">https://policy.medium.com/medium-terms-of-service-9db0094a1e0f</a>&gt;</p><p>&hairsp;</p>",
+          "subject": "Medium Day 2026: Register Now",
+          "date": "2026-07-14T15:00:06.000Z",
+          "to": {
+            "value": [
+              {
+                "address": "ekanwal247@gmail.com",
+                "name": ""
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><a href=\"mailto:ekanwal247@gmail.com\" class=\"mp_address_email\">ekanwal247@gmail.com</a></span>",
+            "text": "ekanwal247@gmail.com"
+          },
+          "from": {
+            "value": [
+              {
+                "address": "noreply@medium.com",
+                "name": "Medium Events"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Medium Events</span> &lt;<a href=\"mailto:noreply@medium.com\" class=\"mp_address_email\">noreply@medium.com</a>&gt;</span>",
+            "text": "\"Medium Events\" <noreply@medium.com>"
+          },
+          "messageId": "<i4fThciOQa-gfE9xnvJfeg@geopod-ismtpd-31>",
+          "replyTo": {
+            "value": [
+              {
+                "address": "noreply@medium.com",
+                "name": "Medium Events"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Medium Events</span> &lt;<a href=\"mailto:noreply@medium.com\" class=\"mp_address_email\">noreply@medium.com</a>&gt;</span>",
+            "text": "\"Medium Events\" <noreply@medium.com>"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1a91103a-860c-4709-922d-e58a7c1969e8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "edce5147b4c8cab649a55e6f8abcab55b0e83e79e94233312475afda666c50ef"
+  },
+  "nodeGroups": [],
+  "id": "b8YB3VY0DEZ7FiTt",
+  "tags": []
+}
